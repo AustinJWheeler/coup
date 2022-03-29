@@ -26,7 +26,12 @@
 
 ## Play
 
+### phases
 1. Player Claims Action
 2. Allowence for Challenge
 3. Allowence for Counteraction
 4. Allowence for Counteraction Challenge
+
+### moves
+- challenge
+- any of 10 actions
