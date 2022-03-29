@@ -273,8 +273,33 @@ const getLastAction = (game_state) => {
     return { action_move, challenge_action, counter_move, challenge_counter, exchange_discard };
 }
 
-const printGameState = () => {
-    
+const printGameState = (game_state) => {
+    const human_readable = {
+        deck: [...game_state.deck],
+        players: [
+            {
+                hand: [...game_state.players[0].hand.map(ets)],
+                lost_influence: [...game_state.players[0].lost_influence.map(ets)],
+                coins: game_state.players[0].coins
+            },
+            {
+                hand: [...game_state.players[1].hand.map(ets)],
+                lost_influence: [...game_state.players[1].lost_influence.map(ets)],
+                coins: game_state.players[1].coins
+            }
+        ],
+        history: game_state.history.map(x => {
+            if (x.length === 2)
+                return [x[0], ets(x[1])];
+            let arg = x[2];
+            if (x[1] !== COUP &&
+              x[1] !== ASSASSINATE &&
+              x[1] !== STEAL)
+                arg = ets(arg);
+            return [x[0], ets(x[1]), arg];
+        })
+    };
+    console.log(JSON.stringify(human_readable, null, '  '));
 }
 
 const play_turn = (game_state, stratagy) => {
@@ -388,7 +413,7 @@ const play_turn = (game_state, stratagy) => {
 const play_game = () => {
     const strat = generate_basic_strategy();
     let s = generate_game_state();
-    console.log(JSON.stringify(s, null, '  '));
+    printGameState(s);
     while (true) {
         s = play_turn(s, strat);
         if (s.players[0].lost_influence.length >= 2 ||
@@ -397,7 +422,7 @@ const play_game = () => {
         if (s.players[0].lost_influence.length >= 2 ||
             s.players[1].lost_influence.length >= 2) break;
     }
-    console.log(JSON.stringify(s, null, '  '));
+    printGameState(s);
 }
 
 play_game();
