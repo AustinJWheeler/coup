@@ -1,0 +1,11 @@
+{
+    "name": "coup_2player",
+    "version": "1.0.0",
+    "main": "main.js",
+    "repository": "git@github.com:AustinJWheeler/coup.git",
+    "author": "Austin Wheeler <austin@awheeler.io>",
+    "license": "MIT",
+    "devDependencies": {
+        "prettier": "2.6.2"
+    }
+}
