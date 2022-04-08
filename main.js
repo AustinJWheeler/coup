@@ -135,6 +135,8 @@ const enumToString = (x) => {
             return 'Steal'
         case EXCHANGE:
             return 'Exchange'
+        case EXCHANGE_DISCARD:
+            return 'Discard (Exchange)'
         case BLOCK_AID:
             return 'Block Aid'
         case BLOCK_ASSASSINATE:
@@ -319,13 +321,16 @@ const printGameState = (game_state) => {
                 coins: game_state.players[1].coins,
             },
         ],
-        history: game_state.history.map((x) => {
-            if (x.length === 2) return [x[0], ets(x[1])]
-            let arg = x[2]
-            if (x[1] !== COUP && x[1] !== ASSASSINATE && x[1] !== STEAL)
-                arg = ets(arg)
-            return [x[0], ets(x[1]), arg]
-        }),
+        history: game_state.history
+            .map((x) => {
+                if (x[1] === CHALLENGE && x[2] === 0) return null
+                let str = 'Player ' + x[0] + ' ' + ets(x[1])
+                if (x.length !== 2)
+                    if (x[1] !== COUP && x[1] !== ASSASSINATE && x[1] !== STEAL)
+                        str += ' (' + ets(x[2]) + ')'
+                return str
+            })
+            .filter((x) => x),
     }
     console.log(JSON.stringify(human_readable, null, '  '))
 }
@@ -376,12 +381,12 @@ const play_turn = (game_state) => {
         s.players[1].lost_influence.length < 2
     ) {
         counter = s.players[1].strategy(shift_game_state(s), P_COUNTERACTION)
-        s.history.push([1, counter])
         // todo validate counteration
     }
 
     // Challenge
     if (counter) {
+        s.history.push([1, counter])
         const challenge = s.players[0].strategy(s, P_CHALLENGE)
         s.history.push([0, CHALLENGE, challenge])
         if (challenge) {
