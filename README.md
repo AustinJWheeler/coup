@@ -2,7 +2,13 @@
 
 ### Running
 
-To run the simulation
+You'll need yarn
+
+```
+npm install --global yarn
+```
+
+To run the simulation, type this
 
 ```
 yarn node main.js

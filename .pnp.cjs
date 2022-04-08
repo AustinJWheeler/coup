@@ -33,7 +33,8 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         [null, {\
           "packageLocation": "./",\
           "packageDependencies": [\
-            ["prettier", "npm:2.6.2"]\
+            ["prettier", "npm:2.6.2"],\
+            ["random-seed", "npm:0.3.0"]\
           ],\
           "linkType": "SOFT"\
         }]\
@@ -43,9 +44,19 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./",\
           "packageDependencies": [\
             ["coup_2player", "workspace:."],\
-            ["prettier", "npm:2.6.2"]\
+            ["prettier", "npm:2.6.2"],\
+            ["random-seed", "npm:0.3.0"]\
           ],\
           "linkType": "SOFT"\
+        }]\
+      ]],\
+      ["json-stringify-safe", [\
+        ["npm:5.0.1", {\
+          "packageLocation": "./.yarn/cache/json-stringify-safe-npm-5.0.1-064ddd6ab4-48ec0adad5.zip/node_modules/json-stringify-safe/",\
+          "packageDependencies": [\
+            ["json-stringify-safe", "npm:5.0.1"]\
+          ],\
+          "linkType": "HARD"\
         }]\
       ]],\
       ["prettier", [\
@@ -53,6 +64,16 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/prettier-npm-2.6.2-05918420da-48d08dde8e.zip/node_modules/prettier/",\
           "packageDependencies": [\
             ["prettier", "npm:2.6.2"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["random-seed", [\
+        ["npm:0.3.0", {\
+          "packageLocation": "./.yarn/cache/random-seed-npm-0.3.0-0bd617817e-0a82692fc8.zip/node_modules/random-seed/",\
+          "packageDependencies": [\
+            ["random-seed", "npm:0.3.0"],\
+            ["json-stringify-safe", "npm:5.0.1"]\
           ],\
           "linkType": "HARD"\
         }]\

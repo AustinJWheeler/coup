@@ -5,7 +5,11 @@
     "repository": "git@github.com:AustinJWheeler/coup.git",
     "author": "Austin Wheeler <austin@awheeler.io>",
     "license": "MIT",
+    "type": "module",
     "devDependencies": {
         "prettier": "2.6.2"
+    },
+    "dependencies": {
+        "random-seed": "^0.3.0"
     }
 }

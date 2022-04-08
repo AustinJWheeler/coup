@@ -1,26 +1,4 @@
-// simulate game
-// make simple player
-// make api
-
-// 4 api queries
-//   1. Action
-//   2. Challenge
-//   3. Counteraction
-//   4. Exchange
-//   5. Challenge Response
-
-// play log format
-// player, move_type, arg
-// args:
-//   Draw: card
-//   Challenge_Response: bool
-//   Coup: target_player
-//   Assassinate: target_player
-//   Steal: target_player
-//   Exchange_Discard: two_cards
-
-// moves
-//
+import random_seed from 'random-seed'
 
 const P_ACTION = 200
 const P_CHALLENGE = 201
@@ -176,14 +154,15 @@ const ets = enumToString
 
 const generate_deck = () => new Array(3).fill(CHARACTERS.slice()).flat()
 
-const shuffle = (a) =>
+const shuffle = (a, prng) =>
     a
-        .map((x) => [Math.random(), x])
+        .map((x) => [prng.random(), x])
         .sort((a, b) => a[0] - b[0])
         .map((x) => x[1])
 
-const generate_game_state = (player_1_strategy, player_2_strategy) => {
-    const deck = shuffle(generate_deck())
+const generate_game_state = (player_1_strategy, player_2_strategy, seed) => {
+    const prng = random_seed.create(seed)
+    const deck = shuffle(generate_deck(), prng)
     const players = [
         {
             hand: [deck.pop(), deck.pop()],
@@ -200,68 +179,73 @@ const generate_game_state = (player_1_strategy, player_2_strategy) => {
     ]
     const history = [] // todo init
     return {
+        prng,
         deck,
         history,
         players,
     }
 }
 
-const basic_strategy = (game_state, prompt) => {
-    const history = game_state.history
-    const player = game_state.players[0]
-    const hand = player.hand
-    if (prompt === P_ACTION) {
-        if (player.coins >= 7) return [COUP, 1]
-        if (player.coins >= 3 && hand.indexOf(ASSASSIN) !== -1)
-            return [ASSASSINATE, 1]
-        if (hand.indexOf(CAPTAIN) !== -1) return [STEAL, 1]
-        if (hand.indexOf(DUKE) !== -1) return [TAX]
-        if (hand.indexOf(AMBASSADOR) !== -1) return [EXCHANGE]
-        return [Math.random() < 0.5 ? INCOME : FOREIGN_AID]
-    }
-    if (prompt === P_CHALLENGE) {
-        return Math.random() < 0.1 ? hand[0] : 0
-    }
-    if (prompt === P_CHALLENGE_RESPONSE) {
-        let character = null
-        for (let i = history.length - 1; !character; i--)
-            character = getRequiredCharacter(history[i][1])
-        const index = hand.indexOf(character)
-        if (index === -1) return hand[Math.floor(Math.random() * 2)]
-        return hand[index]
-    }
-    if (prompt === P_COUNTERACTION) {
-        let i = history.length - 1
-        while (ACTIONS.indexOf(history[i][1]) === -1) i--
-        const action = history[i][1]
-        switch (action) {
-            case FOREIGN_AID:
-                if (hand.indexOf(DUKE) !== -1) return BLOCK_AID
-                break
-            case ASSASSINATE:
-                if (hand.indexOf(CONTESSA) !== -1) return BLOCK_ASSASSINATE
-                break
-            case STEAL:
-                if (hand.indexOf(AMBASSADOR)) return BLOCK_STEAL_AMBASSADOR
-                if (hand.indexOf(CAPTAIN)) return BLOCK_STEAL_CAPTAIN
-                break
-            default:
-                return null
+const generate_basic_strategy = (seed) => {
+    const prng = random_seed.create(seed)
+    return (game_state, prompt) => {
+        const history = game_state.history
+        const player = game_state.players[0]
+        const hand = player.hand
+        if (prompt === P_ACTION) {
+            if (player.coins >= 7) return [COUP, 1]
+            if (player.coins >= 3 && hand.indexOf(ASSASSIN) !== -1)
+                return [ASSASSINATE, 1]
+            if (hand.indexOf(CAPTAIN) !== -1) return [STEAL, 1]
+            if (hand.indexOf(DUKE) !== -1) return [TAX]
+            if (hand.indexOf(AMBASSADOR) !== -1) return [EXCHANGE]
+            return [prng.random() < 0.5 ? INCOME : FOREIGN_AID]
         }
-    }
-    if (prompt === P_EXCHANGE_DISCARD) {
-        let index = 0
-        while (index < hand.length && hand[index] === AMBASSADOR) index++
-        if (index === hand.length) return [AMBASSADOR, AMBASSADOR]
-        return [AMBASSADOR, hand[index]]
-    }
-    if (prompt === P_LOSE_INFLUENCE) {
-        return hand[0]
+        if (prompt === P_CHALLENGE) {
+            return prng.random() < 0.1 ? hand[0] : 0
+        }
+        if (prompt === P_CHALLENGE_RESPONSE) {
+            let character = null
+            for (let i = history.length - 1; !character; i--)
+                character = getRequiredCharacter(history[i][1])
+            const index = hand.indexOf(character)
+            if (index === -1) return hand[Math.floor(prng.random() * 2)]
+            return hand[index]
+        }
+        if (prompt === P_COUNTERACTION) {
+            let i = history.length - 1
+            while (ACTIONS.indexOf(history[i][1]) === -1) i--
+            const action = history[i][1]
+            switch (action) {
+                case FOREIGN_AID:
+                    if (hand.indexOf(DUKE) !== -1) return BLOCK_AID
+                    break
+                case ASSASSINATE:
+                    if (hand.indexOf(CONTESSA) !== -1) return BLOCK_ASSASSINATE
+                    break
+                case STEAL:
+                    if (hand.indexOf(AMBASSADOR)) return BLOCK_STEAL_AMBASSADOR
+                    if (hand.indexOf(CAPTAIN)) return BLOCK_STEAL_CAPTAIN
+                    break
+                default:
+                    return null
+            }
+        }
+        if (prompt === P_EXCHANGE_DISCARD) {
+            let index = 0
+            while (index < hand.length && hand[index] === AMBASSADOR) index++
+            if (index === hand.length) return [AMBASSADOR, AMBASSADOR]
+            return [AMBASSADOR, hand[index]]
+        }
+        if (prompt === P_LOSE_INFLUENCE) {
+            return hand[0]
+        }
     }
 }
 
 const shift_game_state = (game_state) => {
     return {
+        prng: game_state.prng,
         deck: [...game_state.deck],
         players: [
             {
@@ -366,7 +350,7 @@ const play_turn = (game_state) => {
             s.players[0].hand.splice(s.players[0].hand.indexOf(response), 1)
             if (response === getRequiredCharacter(action[0])) {
                 s.deck.push(response)
-                s.deck = shuffle(s.deck)
+                s.deck = shuffle(s.deck, s.prng)
                 s.players[0].hand.push(s.deck.pop())
 
                 s.players[1].hand.splice(
@@ -409,7 +393,7 @@ const play_turn = (game_state) => {
             s.players[1].hand.splice(s.players[1].hand.indexOf(response), 1)
             if (response === getRequiredCharacter(counter)) {
                 s.deck.push(response)
-                s.deck = shuffle(s.deck)
+                s.deck = shuffle(s.deck, s.prng)
                 s.players[1].hand.push(s.deck.pop())
 
                 s.players[0].hand.splice(
@@ -464,7 +448,7 @@ const play_turn = (game_state) => {
             const indexes = discards.map((x) => s.players[0].hand.indexOf(x))
             indexes.forEach((x) => s.players[0].hand.splice(x, 1))
             s.deck.push(...discards)
-            s.deck = shuffle(s.deck)
+            s.deck = shuffle(s.deck, s.prng)
             break
     }
 
@@ -472,7 +456,12 @@ const play_turn = (game_state) => {
 }
 
 const play_game = () => {
-    let s = generate_game_state(basic_strategy, basic_strategy)
+    const master_prng = random_seed.create(1)
+    let s = generate_game_state(
+        generate_basic_strategy(master_prng.random()),
+        generate_basic_strategy(master_prng.random()),
+        master_prng.random()
+    )
     printGameState(s)
     while (true) {
         s = play_turn(s)
