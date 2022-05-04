@@ -461,6 +461,8 @@ const play_turn = (game_state) => {
 }
 
 const play_game = () => {
+    // const master_prng = random_seed.create(Math.random()) // will play random game
+    // const master_prng = random_seed.create(2) // will play different deterministic game
     const master_prng = random_seed.create(1)
     let s = generate_game_state(
         generate_basic_strategy(master_prng.random()),
